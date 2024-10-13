@@ -28,20 +28,9 @@ struct LoginView: View {
 
             VStack(spacing: 40) { // This view container will be in center of screen.
                 Text(EnvironmentUtil.appName)
-
-                TextField("First name", text: $firstNameText).setAppiumId("First Name Input")
-                TextField("Email", text: $emailText)
-                    .keyboardType(.emailAddress)
-                    .setAppiumId("Email Input")
-                ColorButton("Login") {
-                    attemptToLogin()
+                ColorButton("ReproduceBug") {
+                    attemptToReproduceBug()
                 }.setAppiumId("Login Button")
-                Button("Generate random login") {
-                    firstNameText = ""
-                    emailText = "\(String.random(length: 10))@customer.io"
-
-                    attemptToLogin()
-                }.setAppiumId("Random Login Button")
             }
             .padding([.leading, .trailing], 50)
 
@@ -64,8 +53,9 @@ struct LoginView: View {
         }
     }
 
-    private func attemptToLogin() {
-        // first name is optional
+    private func attemptToReproduceBug() {
+        firstNameText = ""
+        emailText = "\(String.random(length: 10))@customer.io"
 
         // this is good practice when using the Customer.io SDK as you cannot identify a profile with an empty string.
         guard !emailText.isEmpty else {
@@ -73,12 +63,31 @@ struct LoginView: View {
             return
         }
 
+        // Identify the user in Customer.io
         CustomerIO.shared.identify(identifier: emailText, body: [
             "email": emailText,
             "first_name": firstNameText
         ])
+        
 
-        userManager.userLoggedIn(email: emailText)
+        
+
+        
+        // Wait for 1 second before clearing identity and logging out
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            // Clear the Customer.io identity after 1 second
+            CustomerIO.shared.clearIdentify()
+
+            
+            
+            CustomerIO.shared.identify(identifier: "4e2j1by4bm@customer.io", body: [
+                "email": "existing.account10@customer.io",
+                "first_name": firstNameText
+            ])
+            
+
+            userManager.userLoggedIn(email: "existing.account10@customer.io")
+        }
     }
 }
 
